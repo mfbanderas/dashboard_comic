@@ -22,7 +22,7 @@ st.markdown("""
     }
     
     /* Forzamos que los títulos sean oscuros siempre */
-    h1, h2, h3, p, span {
+    h1, h2, h3, p, span, div {
         color: #1F2937 !important;
     }
     
@@ -61,6 +61,11 @@ st.markdown("""
     [data-testid="stSidebar"] {
         background-color: #FFFFFF !important;
     }
+    
+    /* Ajuste para textos en gráficos Plotly */
+    .js-plotly-plot .plotly .gtitle {
+        fill: #1F2937 !important;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -68,57 +73,99 @@ st.markdown("""
 C_RED, C_BLACK, C_BLUE, C_YELLOW = '#E74C3C', '#2C3E50', '#3498DB', '#F1C40F'
 PALETTE = [C_RED, C_BLACK, C_BLUE, C_YELLOW]
 
+# --- 3. CARGA DE DATOS CORREGIDA ---
 @st.cache_data
 def load_data():
     file_name = 'results-survey1.csv'
     try:
         df = pd.read_csv(file_name, sep=';', encoding='utf-8')
     except:
-        df = pd.read_csv(file_name, sep=';', encoding='latin-1')
+        try:
+            df = pd.read_csv(file_name, sep=';', encoding='latin-1')
+        except:
+             return None 
+
+    # 1. LIMPIEZA DE NOMBRES DE COLUMNA (Quita espacios extra al final)
     df.columns = df.columns.str.strip()
+    
+    # 2. RELLENAR VACÍOS (CRUCIAL PARA EVITAR ERRORES)
+    # Nombre exacto después del strip() es 'A7. Rol Principal'
+    if "A7. Rol Principal" in df.columns:
+        df["A7. Rol Principal"] = df["A7. Rol Principal"].fillna("Sin especificar")
+    
+    # Nombre exacto después del strip() es 'A2. Identidad de género' (sin espacio final)
+    if "A2. Identidad de género" in df.columns:
+        df["A2. Identidad de género"] = df["A2. Identidad de género"].fillna("No responde")
+
+    # 3. PROCESAR FECHAS
     if 'Fecha' in df.columns and 'Hora' in df.columns:
         df['Fecha_dt'] = pd.to_datetime(df['Fecha'], dayfirst=True, errors='coerce')
+        # Si la fecha falla, no la borramos, ponemos una por defecto o la dejamos NaT
         df['Hora_dt'] = pd.to_datetime(df['Hora'], format='%H:%M:%S', errors='coerce').dt.hour
     elif 'Fecha de envío' in df.columns:
          df['Fecha_Completa'] = pd.to_datetime(df['Fecha de envío'], dayfirst=True, errors='coerce')
          df['Fecha_dt'] = df['Fecha_Completa'].dt.normalize()
          df['Hora_dt'] = df['Fecha_Completa'].dt.hour
+         
+    # 4. PROCESAR UBICACIÓN
     if 'A5. Provincia de residencia' in df.columns:
         df['Ubicación Final'] = df.apply(
             lambda x: x['A5. Provincia de residencia'] if pd.notna(x['A5. Provincia de residencia']) 
             else x.get('A5a. País Extranjero', 'Desconocido'), axis=1
         )
+        df['Ubicación Final'] = df['Ubicación Final'].fillna("Desconocido")
+        
     return df
 
 try:
     df = load_data()
     if df is not None:
-        # Filtros en Sidebar
+        # --- 4. BARRA LATERAL CON FILTROS ---
         with st.sidebar:
             st.header("🎛️ Panel de Control")
-            if "A7. Rol Principal" in df.columns:
-                roles_unicos = sorted(df["A7. Rol Principal"].dropna().unique())
-                seleccion_roles = st.multiselect("Rol Profesional:", options=["(Seleccionar Todos)"] + list(roles_unicos), default=["(Seleccionar Todos)"])
-                roles_activos = roles_unicos if "(Seleccionar Todos)" in seleccion_roles else seleccion_roles
             
-            min_date, max_date = df['Fecha_dt'].min().date(), df['Fecha_dt'].max().date()
-            fechas = st.date_input("Rango de Fechas:", value=(min_date, max_date))
-            start_date, end_date = fechas if len(fechas) == 2 else (min_date, max_date)
+            # Filtro de Roles
+            if "A7. Rol Principal" in df.columns:
+                roles_unicos = sorted(df["A7. Rol Principal"].unique())
+                seleccion_roles = st.multiselect(
+                    "Rol Profesional:", 
+                    options=["(Seleccionar Todos)"] + list(roles_unicos), 
+                    default=["(Seleccionar Todos)"]
+                )
+                roles_activos = roles_unicos if "(Seleccionar Todos)" in seleccion_roles else seleccion_roles
+            else:
+                roles_activos = []
+            
+            # Filtro de Fechas
+            if 'Fecha_dt' in df.columns:
+                min_date = df['Fecha_dt'].min().date()
+                max_date = df['Fecha_dt'].max().date()
+                fechas = st.date_input("Rango de Fechas:", value=(min_date, max_date))
+                if isinstance(fechas, tuple) and len(fechas) == 2:
+                    start_date, end_date = fechas
+                else:
+                    start_date, end_date = min_date, max_date
 
-        mask = (df["A7. Rol Principal"].isin(roles_activos)) & (df['Fecha_dt'].dt.date >= start_date) & (df['Fecha_dt'].dt.date <= end_date)
+        # APLICAR FILTROS
+        mask = (df["A7. Rol Principal"].isin(roles_activos)) & \
+               (df['Fecha_dt'].dt.date >= start_date) & \
+               (df['Fecha_dt'].dt.date <= end_date)
+        
         df_filtered = df[mask]
 
-        # Layout
+        # --- 5. LAYOUT ---
         st.markdown(f"<h1>Monitor Avance Estudio | Mujeres en el Cómic <span style='color:{C_RED}'>2026</span></h1>", unsafe_allow_html=True)
         st.markdown("Reporte diario de avance y calidad de la muestra.")
 
         # KPIs
         META = 150
-        pct_avance = (len(df)/META)*100
+        total_real = len(df)
+        pct_avance = (total_real/META)*100
+        
         col1, col2, col3, col4 = st.columns(4)
-        col1.metric("Total Encuestas", len(df_filtered))
-        col2.metric("Meta Objetivo", META)
-        col3.metric("Faltantes", META - len(df))
+        col1.metric("Muestra Filtrada", len(df_filtered))
+        col2.metric("Total Real", total_real)
+        col3.metric("Faltantes", META - total_real)
         
         with col4:
             fig_gauge = go.Figure(go.Indicator(
@@ -132,7 +179,7 @@ try:
 
         st.markdown("---")
 
-        # Gráficos Temporales
+        # Gráficos
         st.markdown("### 1. Dinámica de Respuesta")
         c1, c2 = st.columns((2, 1))
         
@@ -141,42 +188,58 @@ try:
             diario = df_filtered.groupby('Fecha_dt').size().reset_index(name='Encuestas')
             fig_line = px.line(diario, x='Fecha_dt', y='Encuestas', markers=True)
             fig_line.update_traces(line_color=C_BLACK, marker_color=C_RED)
-            # FORZAMOS FONDO BLANCO Y TEXTO OSCURO
-            fig_line.update_layout(paper_bgcolor='white', plot_bgcolor='white', font={'color': '#1F2937'})
+            fig_line.update_layout(paper_bgcolor='white', plot_bgcolor='white', font={'color': '#1F2937'}, yaxis_gridcolor='#EEE')
             st.plotly_chart(fig_line, use_container_width=True)
             
         with c2:
             st.markdown("**⏰ Horas Punta**")
-            horas = df_filtered['Hora_dt'].value_counts().sort_index().reset_index()
-            horas.columns = ['Hora', 'Cantidad']
-            all_hours = pd.DataFrame({'Hora': range(24)})
-            horas = all_hours.merge(horas, on='Hora', how='left').fillna(0)
-            fig_bar_h = px.bar(horas, x='Hora', y='Cantidad', text='Cantidad', color_discrete_sequence=[C_BLUE])
-            fig_bar_h.update_layout(paper_bgcolor='white', plot_bgcolor='white', font={'color': '#1F2937'}, xaxis=dict(tickmode='linear', dtick=1))
-            st.plotly_chart(fig_bar_h, use_container_width=True)
+            if 'Hora_dt' in df_filtered.columns:
+                horas = df_filtered['Hora_dt'].value_counts().sort_index().reset_index()
+                horas.columns = ['Hora', 'Cantidad']
+                all_hours = pd.DataFrame({'Hora': range(24)})
+                horas = all_hours.merge(horas, on='Hora', how='left').fillna(0)
+                fig_bar_h = px.bar(horas, x='Hora', y='Cantidad', text='Cantidad', color_discrete_sequence=[C_BLUE])
+                fig_bar_h.update_traces(textposition='outside')
+                fig_bar_h.update_layout(paper_bgcolor='white', plot_bgcolor='white', font={'color': '#1F2937'}, xaxis=dict(tickmode='linear', dtick=1), yaxis_gridcolor='#EEE')
+                st.plotly_chart(fig_bar_h, use_container_width=True)
 
-        # Perfil
         st.markdown("### 2. Perfil del Encuestado")
         c3, c4 = st.columns(2)
         with c3:
             st.markdown("**Género**")
-            genero = df_filtered['A2. Identidad de género '].value_counts().reset_index()
-            fig_pie = px.pie(genero, values='count', names='A2. Identidad de género ', hole=0.5, color_discrete_sequence=PALETTE)
-            fig_pie.update_layout(paper_bgcolor='white', font={'color': '#1F2937'})
-            st.plotly_chart(fig_pie, use_container_width=True)
+            # Corrección del nombre de columna (sin espacio al final)
+            col_genero = 'A2. Identidad de género'
+            if col_genero in df_filtered.columns:
+                genero = df_filtered[col_genero].value_counts().reset_index()
+                genero.columns = ['Género', 'Cantidad']
+                fig_pie = px.pie(genero, values='Cantidad', names='Género', hole=0.5, color_discrete_sequence=PALETTE)
+                fig_pie.update_layout(paper_bgcolor='white', font={'color': '#1F2937'})
+                st.plotly_chart(fig_pie, use_container_width=True)
+            else:
+                st.warning("No se encontraron datos de género.")
+
         with c4:
             st.markdown("**Roles Principales**")
             roles = df_filtered['A7. Rol Principal'].value_counts().head(7).reset_index()
-            fig_rol = px.bar(roles, y='A7. Rol Principal', x='count', orientation='h', color_discrete_sequence=[C_YELLOW])
-            fig_rol.update_layout(paper_bgcolor='white', plot_bgcolor='white', font={'color': '#1F2937'})
+            roles.columns = ['Rol', 'Cantidad']
+            fig_rol = px.bar(roles, y='Rol', x='Cantidad', orientation='h', text='Cantidad', color_discrete_sequence=[C_YELLOW])
+            fig_rol.update_traces(textposition='inside', textfont=dict(color='black'))
+            fig_rol.update_layout(paper_bgcolor='white', plot_bgcolor='white', font={'color': '#1F2937'}, xaxis_visible=False)
             st.plotly_chart(fig_rol, use_container_width=True)
 
-        # Geografía
         st.markdown("**Distribución Geográfica (Top 15)**")
         ubic = df_filtered['Ubicación Final'].value_counts().head(15).reset_index()
-        fig_ubic = px.bar(ubic, x='Ubicación Final', y='count', color_discrete_sequence=[C_BLACK])
-        fig_ubic.update_layout(paper_bgcolor='white', plot_bgcolor='white', font={'color': '#1F2937'})
+        ubic.columns = ['Lugar', 'Cantidad']
+        fig_ubic = px.bar(ubic, x='Lugar', y='Cantidad', text='Cantidad', color_discrete_sequence=[C_BLACK])
+        fig_ubic.update_traces(textposition='outside')
+        fig_ubic.update_layout(paper_bgcolor='white', plot_bgcolor='white', font={'color': '#1F2937'}, yaxis_visible=False, margin=dict(b=50))
         st.plotly_chart(fig_ubic, use_container_width=True)
 
+        st.markdown("---")
+        st.markdown("<div style='text-align: center; color: #888; font-size: 12px;'>Dashboard generado con Python Streamlit</div>", unsafe_allow_html=True)
+
+    else:
+        st.error("⚠️ Error: No se pudo cargar 'results-survey1.csv'.")
+
 except Exception as e:
-    st.error(f"Error: {e}")
+    st.error(f"Error inesperado: {e}")
