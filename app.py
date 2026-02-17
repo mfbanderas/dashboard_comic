@@ -12,10 +12,10 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. ESTILOS CSS "AESTHETIC" PRO ---
+# --- 2. ESTILOS CSS "AESTHETIC" (TEXTO GRANDE 40px) ---
 st.markdown("""
     <style>
-    /* 1. Fondo General Aesthetic (Gris Azulado Suave) */
+    /* 1. Fondo General Aesthetic */
     .stApp {
         background-color: #F0F2F6 !important;
         color: #262730 !important;
@@ -24,8 +24,8 @@ st.markdown("""
     /* 2. Títulos con Marca Roja Vertical */
     h1, h2, h3 {
         color: #1F2937 !important;
-        border-left: 6px solid #E74C3C !important; /* Línea roja */
-        padding-left: 20px !important; /* Espacio entre línea y texto */
+        border-left: 6px solid #E74C3C !important;
+        padding-left: 20px !important;
         font-family: 'Helvetica Neue', sans-serif;
     }
     
@@ -34,7 +34,7 @@ st.markdown("""
         font-size: 16px !important;
     }
     
-    /* 4. Tarjetas de métricas (Efecto "Card" flotante) */
+    /* 4. Tarjetas de métricas */
     div[data-testid="stMetric"] {
         background-color: #FFFFFF !important;
         border: 1px solid #E5E7EB !important;
@@ -43,20 +43,26 @@ st.markdown("""
         box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         text-align: center;
         height: 150px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
     }
     
-    /* Etiquetas y Valores de Métricas más grandes */
+    /* Etiquetas (Label) */
     [data-testid="stMetricLabel"] {
         color: #6B7280 !important;
         font-size: 1rem !important;
         font-weight: 600 !important;
     }
+    
+    /* VALORES (Los números en rojo) - AHORA TAMAÑO 40px */
     [data-testid="stMetricValue"] {
         color: #E74C3C !important;
-        font-size: 2.5rem !important;
+        font-size: 40px !important; /* <--- CAMBIO AQUÍ */
+        font-weight: 700 !important;
     }
     
-    /* 5. Caja Blanca para el Gauge (Columna 4) */
+    /* 5. Caja Blanca para el Gauge */
     div[data-testid="column"]:nth-of-type(4) div[data-testid="stVerticalBlock"] {
         background-color: #FFFFFF !important;
         border: 1px solid #E5E7EB !important;
@@ -69,7 +75,6 @@ st.markdown("""
         justify-content: center;
     }
 
-    /* Sidebar limpia */
     [data-testid="stSidebar"] {
         background-color: #FFFFFF !important;
         border-right: 1px solid #E5E7EB;
@@ -79,7 +84,7 @@ st.markdown("""
 
 # Paleta de Colores
 C_RED = '#E74C3C'
-C_BLACK = '#2C3E50' # Azul muy oscuro casi negro
+C_BLACK = '#2C3E50'
 C_BLUE = '#3498DB'
 C_YELLOW = '#F1C40F'
 PALETTE = [C_RED, C_BLACK, C_BLUE, C_YELLOW]
@@ -105,7 +110,7 @@ def load_data():
     if "A2. Identidad de género" in df.columns:
         df["A2. Identidad de género"] = df["A2. Identidad de género"].fillna("No responde")
 
-    # Procesar fechas
+    # Fechas
     if 'Fecha' in df.columns and 'Hora' in df.columns:
         df['Fecha_dt'] = pd.to_datetime(df['Fecha'], dayfirst=True, errors='coerce')
         df['Fecha_dt'] = df['Fecha_dt'].fillna(pd.Timestamp.today())
@@ -115,7 +120,7 @@ def load_data():
          df['Fecha_dt'] = df['Fecha_Completa'].dt.normalize()
          df['Hora_dt'] = df['Fecha_Completa'].dt.hour
          
-    # Procesar ubicación
+    # Ubicación
     if 'A5. Provincia de residencia' in df.columns:
         df['Ubicación Final'] = df.apply(
             lambda x: x['A5. Provincia de residencia'] if pd.notna(x['A5. Provincia de residencia']) 
@@ -163,16 +168,20 @@ try:
         st.markdown("Reporte diario de avance y calidad de la muestra.")
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # KPIs
+        # KPIs (ACTUALIZADOS CON TU LÓGICA)
         META = 150
         total_real = len(df)
         pct_avance = (total_real/META)*100
         
         col1, col2, col3, col4 = st.columns(4)
-        col1.metric("Muestra Filtrada", len(df_filtered))
-        col2.metric("Total Real", total_real)
-        col3.metric("Faltantes", META - total_real)
         
+        with col1:
+            st.metric("Respuestas", len(df_filtered)) # Filtradas
+        with col2:
+            st.metric("Meta", META)                   # Meta Fija
+        with col3:
+            st.metric("Faltantes", META - total_real) # Faltantes reales
+            
         with col4:
             # GAUGE
             fig_gauge = go.Figure(go.Indicator(
@@ -192,15 +201,14 @@ try:
 
         st.markdown("---")
 
-        # --- FUNCIÓN DE ESTILO (Letra Grande + Margen) ---
+        # --- FUNCIÓN DE ESTILO (Letra Grande + Margen + Ejes Grises) ---
         def estilo_grafico(fig, margin_top=40):
             fig.update_layout(
                 paper_bgcolor='white', 
                 plot_bgcolor='white', 
                 font={'color': '#2C3E50', 'size': 14}, # Letra más grande y oscura
-                margin=dict(l=20, r=60, t=margin_top, b=20) # Margen derecho generoso
+                margin=dict(l=20, r=60, t=margin_top, b=20)
             )
-            # Ejes visibles pero sutiles (Gris Aesthetic)
             fig.update_xaxes(
                 showline=True, linewidth=1, linecolor='#D1D5DB', 
                 showgrid=False, zeroline=False,
@@ -208,7 +216,7 @@ try:
             )
             fig.update_yaxes(
                 showline=True, linewidth=1, linecolor='#D1D5DB', 
-                showgrid=True, gridcolor='#F3F4F6', # Grid muy suave horizontal
+                showgrid=True, gridcolor='#F3F4F6',
                 zeroline=False,
                 tickfont=dict(size=12)
             )
@@ -222,7 +230,6 @@ try:
             st.markdown("**📅 Evolución Diaria**")
             diario = df_filtered.groupby('Fecha_dt').size().reset_index(name='Encuestas')
             fig_line = px.line(diario, x='Fecha_dt', y='Encuestas', markers=True)
-            # Colores de la paleta
             fig_line.update_traces(line_color=C_BLACK, marker_color=C_RED, line_width=3, marker_size=8)
             fig_line = estilo_grafico(fig_line)
             st.plotly_chart(fig_line, use_container_width=True)
@@ -234,12 +241,11 @@ try:
                 horas.columns = ['Hora', 'Cantidad']
                 all_hours = pd.DataFrame({'Hora': range(24)})
                 horas = all_hours.merge(horas, on='Hora', how='left').fillna(0)
-                # Barras Azules
                 fig_bar_h = px.bar(horas, x='Hora', y='Cantidad', text='Cantidad', color_discrete_sequence=[C_BLUE])
                 fig_bar_h.update_traces(textposition='outside')
-                # Margen superior específico solicitado (15)
+                # Margen superior 15 para hora punta
                 fig_bar_h = estilo_grafico(fig_bar_h, margin_top=15)
-                fig_bar_h.update_xaxes(tickmode='linear', dtick=4) # Etiquetas cada 4 horas para limpiar
+                fig_bar_h.update_xaxes(tickmode='linear', dtick=4)
                 st.plotly_chart(fig_bar_h, use_container_width=True)
 
         # GRÁFICOS PERFIL
@@ -251,7 +257,6 @@ try:
             if col_genero in df_filtered.columns:
                 genero = df_filtered[col_genero].value_counts().reset_index()
                 genero.columns = ['Género', 'Cantidad']
-                # Paleta completa para el Pie
                 fig_pie = px.pie(genero, values='Cantidad', names='Género', hole=0.5, color_discrete_sequence=PALETTE)
                 fig_pie.update_layout(
                     paper_bgcolor='white', 
@@ -265,7 +270,6 @@ try:
             st.markdown("**Roles Principales**")
             roles = df_filtered['A7. Rol Principal'].value_counts().head(7).reset_index()
             roles.columns = ['Rol', 'Cantidad']
-            # Barras Amarillas
             fig_rol = px.bar(roles, y='Rol', x='Cantidad', orientation='h', text='Cantidad', color_discrete_sequence=[C_YELLOW])
             fig_rol.update_traces(textposition='inside', textfont=dict(color='black', size=14)) 
             fig_rol = estilo_grafico(fig_rol)
@@ -276,12 +280,11 @@ try:
         st.markdown("### Distribución Geográfica (Top 15)")
         ubic = df_filtered['Ubicación Final'].value_counts().head(15).reset_index()
         ubic.columns = ['Lugar', 'Cantidad']
-        # Barras Negras
         fig_ubic = px.bar(ubic, x='Lugar', y='Cantidad', text='Cantidad', color_discrete_sequence=[C_BLACK])
         fig_ubic.update_traces(textposition='outside')
         fig_ubic = estilo_grafico(fig_ubic, margin_top=30)
         fig_ubic.update_yaxes(visible=False)
-        fig_ubic.update_layout(margin=dict(b=80, r=60)) # Margen inferior extra para etiquetas largas
+        fig_ubic.update_layout(margin=dict(b=80, r=60)) 
         st.plotly_chart(fig_ubic, use_container_width=True)
 
         st.markdown("---")
