@@ -12,66 +12,74 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. ESTILOS CSS (Modo Claro + Alto Contraste) ---
+# --- 2. ESTILOS CSS "AESTHETIC" PRO ---
 st.markdown("""
     <style>
-    /* 1. Fondo BLANCO GLOBAL */
+    /* 1. Fondo General Aesthetic (Gris Azulado Suave) */
     .stApp {
-        background-color: #FFFFFF !important;
-        color: #000000 !important;
+        background-color: #F0F2F6 !important;
+        color: #262730 !important;
     }
     
-    /* 2. Textos en NEGRO PURO */
-    h1, h2, h3, h4, h5, h6, p, span, div, label, .stMarkdown {
-        color: #000000 !important;
+    /* 2. Títulos con Marca Roja Vertical */
+    h1, h2, h3 {
+        color: #1F2937 !important;
+        border-left: 6px solid #E74C3C !important; /* Línea roja */
+        padding-left: 20px !important; /* Espacio entre línea y texto */
+        font-family: 'Helvetica Neue', sans-serif;
     }
     
-    /* 3. Tarjetas de métricas */
+    /* 3. Aumentar tamaño de texto general */
+    p, li, label, .stMarkdown, div {
+        font-size: 16px !important;
+    }
+    
+    /* 4. Tarjetas de métricas (Efecto "Card" flotante) */
     div[data-testid="stMetric"] {
-        background-color: #F9FAFB !important;
+        background-color: #FFFFFF !important;
         border: 1px solid #E5E7EB !important;
-        padding: 10px;
-        border-radius: 10px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        padding: 15px;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         text-align: center;
-        height: 140px;
+        height: 150px;
     }
     
+    /* Etiquetas y Valores de Métricas más grandes */
     [data-testid="stMetricLabel"] {
-        color: #000000 !important;
-        font-weight: bold !important;
+        color: #6B7280 !important;
+        font-size: 1rem !important;
+        font-weight: 600 !important;
     }
     [data-testid="stMetricValue"] {
         color: #E74C3C !important;
+        font-size: 2.5rem !important;
     }
     
-    /* 4. Caja para el Gauge (Columna 4) */
+    /* 5. Caja Blanca para el Gauge (Columna 4) */
     div[data-testid="column"]:nth-of-type(4) div[data-testid="stVerticalBlock"] {
-        background-color: #F9FAFB !important;
+        background-color: #FFFFFF !important;
         border: 1px solid #E5E7EB !important;
-        border-radius: 10px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         padding: 10px;
-        height: 140px;
+        height: 150px;
         display: flex;
         align-items: center;
         justify-content: center;
     }
 
+    /* Sidebar limpia */
     [data-testid="stSidebar"] {
-        background-color: #F3F4F6 !important;
-    }
-    
-    /* Títulos de gráficos en negro */
-    .gtitle {
-        fill: #000000 !important;
+        background-color: #FFFFFF !important;
+        border-right: 1px solid #E5E7EB;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# Colores
+# Paleta de Colores
 C_RED = '#E74C3C'
-C_BLACK = '#000000' 
+C_BLACK = '#2C3E50' # Azul muy oscuro casi negro
 C_BLUE = '#3498DB'
 C_YELLOW = '#F1C40F'
 PALETTE = [C_RED, C_BLACK, C_BLUE, C_YELLOW]
@@ -88,7 +96,6 @@ def load_data():
         except:
              return None 
 
-    # Limpieza de nombres de columna
     df.columns = df.columns.str.strip()
     
     # Rellenar vacíos
@@ -151,9 +158,10 @@ try:
         
         df_filtered = df[mask]
 
-        # --- 5. VISUALIZACIÓN ---
-        st.markdown(f"<h1>Monitor Avance Estudio | Mujeres en el Cómic <span style='color:{C_RED}'>2026</span></h1>", unsafe_allow_html=True)
+        # --- 5. DASHBOARD ---
+        st.markdown(f"<h1>Monitor Avance Estudio <span style='color:{C_RED}'>2026</span></h1>", unsafe_allow_html=True)
         st.markdown("Reporte diario de avance y calidad de la muestra.")
+        st.markdown("<br>", unsafe_allow_html=True)
 
         # KPIs
         META = 150
@@ -169,57 +177,54 @@ try:
             # GAUGE
             fig_gauge = go.Figure(go.Indicator(
                 mode = "gauge+number", value = pct_avance,
-                title = {'text': "AVANCE %", 'font': {'size': 14, 'color': "black"}}, 
-                number = {'suffix': "%", 'font': {'size': 36, 'color': C_RED}},
-                gauge = {'axis': {'range': [None, 100]}, 'bar': {'color': C_RED}, 'bgcolor': "white"}
+                title = {'text': "AVANCE %", 'font': {'size': 15, 'color': "#555"}}, 
+                number = {'suffix': "%", 'font': {'size': 40, 'color': C_RED, 'weight': 'bold'}},
+                gauge = {'axis': {'range': [None, 100]}, 'bar': {'color': C_RED}, 'bgcolor': "#f0f2f6"}
             ))
             fig_gauge.update_layout(
                 height=130, 
                 margin=dict(t=40, b=0, l=15, r=15), 
                 paper_bgcolor='rgba(0,0,0,0)', 
                 plot_bgcolor='rgba(0,0,0,0)', 
-                font={'color': 'black', 'family': 'Arial'}
+                font={'color': C_BLACK, 'family': 'Arial'}
             )
             st.plotly_chart(fig_gauge, use_container_width=True)
 
         st.markdown("---")
 
-        # --- FUNCIÓN DE ESTILO (EJES GRISES + MARGEN) ---
-        def estilo_ejes(fig, margin_top=30):
+        # --- FUNCIÓN DE ESTILO (Letra Grande + Margen) ---
+        def estilo_grafico(fig, margin_top=40):
             fig.update_layout(
                 paper_bgcolor='white', 
                 plot_bgcolor='white', 
-                font={'color': 'black'},
-                margin=dict(l=20, r=60, t=margin_top, b=20) # MARGEN DERECHO AMPLIADO
+                font={'color': '#2C3E50', 'size': 14}, # Letra más grande y oscura
+                margin=dict(l=20, r=60, t=margin_top, b=20) # Margen derecho generoso
             )
+            # Ejes visibles pero sutiles (Gris Aesthetic)
             fig.update_xaxes(
-                showline=True, linewidth=1, linecolor='#D1D5DB', # EJE GRIS CLARO
-                showgrid=False, 
-                zeroline=False,
-                tickfont=dict(color='black'), 
-                title_font=dict(color='black'),
-                tickcolor='#D1D5DB'
+                showline=True, linewidth=1, linecolor='#D1D5DB', 
+                showgrid=False, zeroline=False,
+                tickfont=dict(size=12)
             )
             fig.update_yaxes(
-                showline=True, linewidth=1, linecolor='#D1D5DB', # EJE GRIS CLARO
-                showgrid=False,
+                showline=True, linewidth=1, linecolor='#D1D5DB', 
+                showgrid=True, gridcolor='#F3F4F6', # Grid muy suave horizontal
                 zeroline=False,
-                tickfont=dict(color='black'), 
-                title_font=dict(color='black'),
-                tickcolor='#D1D5DB'
+                tickfont=dict(size=12)
             )
             return fig
 
-        # GRÁFICOS
-        st.markdown("### 1. Dinámica de Respuesta")
+        # GRÁFICOS TEMPORALES
+        st.markdown("### Dinámica de Respuesta")
         c1, c2 = st.columns((2, 1))
         
         with c1:
             st.markdown("**📅 Evolución Diaria**")
             diario = df_filtered.groupby('Fecha_dt').size().reset_index(name='Encuestas')
             fig_line = px.line(diario, x='Fecha_dt', y='Encuestas', markers=True)
-            fig_line.update_traces(line_color='#2C3E50', marker_color=C_RED)
-            fig_line = estilo_ejes(fig_line)
+            # Colores de la paleta
+            fig_line.update_traces(line_color=C_BLACK, marker_color=C_RED, line_width=3, marker_size=8)
+            fig_line = estilo_grafico(fig_line)
             st.plotly_chart(fig_line, use_container_width=True)
             
         with c2:
@@ -229,14 +234,16 @@ try:
                 horas.columns = ['Hora', 'Cantidad']
                 all_hours = pd.DataFrame({'Hora': range(24)})
                 horas = all_hours.merge(horas, on='Hora', how='left').fillna(0)
+                # Barras Azules
                 fig_bar_h = px.bar(horas, x='Hora', y='Cantidad', text='Cantidad', color_discrete_sequence=[C_BLUE])
                 fig_bar_h.update_traces(textposition='outside')
-                # MARGEN SUPERIOR ESPECÍFICO DE 15px
-                fig_bar_h = estilo_ejes(fig_bar_h, margin_top=15)
-                fig_bar_h.update_xaxes(tickmode='linear', dtick=1)
+                # Margen superior específico solicitado (15)
+                fig_bar_h = estilo_grafico(fig_bar_h, margin_top=15)
+                fig_bar_h.update_xaxes(tickmode='linear', dtick=4) # Etiquetas cada 4 horas para limpiar
                 st.plotly_chart(fig_bar_h, use_container_width=True)
 
-        st.markdown("### 2. Perfil del Encuestado")
+        # GRÁFICOS PERFIL
+        st.markdown("### Perfil del Encuestado")
         c3, c4 = st.columns(2)
         with c3:
             st.markdown("**Género**")
@@ -244,11 +251,12 @@ try:
             if col_genero in df_filtered.columns:
                 genero = df_filtered[col_genero].value_counts().reset_index()
                 genero.columns = ['Género', 'Cantidad']
+                # Paleta completa para el Pie
                 fig_pie = px.pie(genero, values='Cantidad', names='Género', hole=0.5, color_discrete_sequence=PALETTE)
                 fig_pie.update_layout(
                     paper_bgcolor='white', 
-                    font={'color': 'black'},
-                    legend=dict(font=dict(color="black")),
+                    font={'color': '#2C3E50', 'size': 14},
+                    legend=dict(font=dict(size=12)),
                     margin=dict(l=20, r=60, t=30, b=20)
                 )
                 st.plotly_chart(fig_pie, use_container_width=True)
@@ -257,24 +265,27 @@ try:
             st.markdown("**Roles Principales**")
             roles = df_filtered['A7. Rol Principal'].value_counts().head(7).reset_index()
             roles.columns = ['Rol', 'Cantidad']
+            # Barras Amarillas
             fig_rol = px.bar(roles, y='Rol', x='Cantidad', orientation='h', text='Cantidad', color_discrete_sequence=[C_YELLOW])
-            fig_rol.update_traces(textposition='inside', textfont=dict(color='black')) 
-            fig_rol = estilo_ejes(fig_rol)
+            fig_rol.update_traces(textposition='inside', textfont=dict(color='black', size=14)) 
+            fig_rol = estilo_grafico(fig_rol)
             fig_rol.update_xaxes(visible=False)
             st.plotly_chart(fig_rol, use_container_width=True)
 
-        st.markdown("**Distribución Geográfica (Top 15)**")
+        # GRÁFICO GEOGRAFÍA
+        st.markdown("### Distribución Geográfica (Top 15)")
         ubic = df_filtered['Ubicación Final'].value_counts().head(15).reset_index()
         ubic.columns = ['Lugar', 'Cantidad']
-        fig_ubic = px.bar(ubic, x='Lugar', y='Cantidad', text='Cantidad', color_discrete_sequence=['#000000'])
+        # Barras Negras
+        fig_ubic = px.bar(ubic, x='Lugar', y='Cantidad', text='Cantidad', color_discrete_sequence=[C_BLACK])
         fig_ubic.update_traces(textposition='outside')
-        fig_ubic = estilo_ejes(fig_ubic)
+        fig_ubic = estilo_grafico(fig_ubic, margin_top=30)
         fig_ubic.update_yaxes(visible=False)
-        fig_ubic.update_layout(margin=dict(b=50, r=60)) # Margen derecho aplicado
+        fig_ubic.update_layout(margin=dict(b=80, r=60)) # Margen inferior extra para etiquetas largas
         st.plotly_chart(fig_ubic, use_container_width=True)
 
         st.markdown("---")
-        st.markdown("<div style='text-align: center; color: black; font-size: 12px;'>Dashboard generado con Python Streamlit</div>", unsafe_allow_html=True)
+        st.markdown("<div style='text-align: center; color: #666; font-size: 14px;'>Dashboard generado con Python Streamlit</div>", unsafe_allow_html=True)
 
     else:
         st.error("⚠️ Error: No se pudo cargar 'results-survey1.csv'.")
