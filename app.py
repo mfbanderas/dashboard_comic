@@ -165,7 +165,7 @@ try:
         df_filtered = df[mask]
 
         # --- CABECERA ---
-        st.markdown(f"<h1>Monitor de Avance <span style='color:{C_RED}'>Encuesta 2026</span></h1>", unsafe_allow_html=True)
+        st.markdown(f"<h1>Monitor de Avance Estudio <span style='color:{C_RED}'>Encuesta Mujer en el Cómic 2026</span></h1>", unsafe_allow_html=True)
         st.markdown("Visión general del estado de la recolección de datos.")
         st.markdown("<br>", unsafe_allow_html=True)
 
