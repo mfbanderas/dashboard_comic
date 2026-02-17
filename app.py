@@ -88,7 +88,7 @@ def load_data():
         except:
              return None 
 
-    # Limpieza
+    # Limpieza de nombres de columna
     df.columns = df.columns.str.strip()
     
     # Rellenar vacíos
@@ -98,7 +98,7 @@ def load_data():
     if "A2. Identidad de género" in df.columns:
         df["A2. Identidad de género"] = df["A2. Identidad de género"].fillna("No responde")
 
-    # Fechas
+    # Procesar fechas
     if 'Fecha' in df.columns and 'Hora' in df.columns:
         df['Fecha_dt'] = pd.to_datetime(df['Fecha'], dayfirst=True, errors='coerce')
         df['Fecha_dt'] = df['Fecha_dt'].fillna(pd.Timestamp.today())
@@ -108,7 +108,7 @@ def load_data():
          df['Fecha_dt'] = df['Fecha_Completa'].dt.normalize()
          df['Hora_dt'] = df['Fecha_Completa'].dt.hour
          
-    # Ubicación
+    # Procesar ubicación
     if 'A5. Provincia de residencia' in df.columns:
         df['Ubicación Final'] = df.apply(
             lambda x: x['A5. Provincia de residencia'] if pd.notna(x['A5. Provincia de residencia']) 
@@ -166,6 +166,7 @@ try:
         col3.metric("Faltantes", META - total_real)
         
         with col4:
+            # GAUGE
             fig_gauge = go.Figure(go.Indicator(
                 mode = "gauge+number", value = pct_avance,
                 title = {'text': "AVANCE %", 'font': {'size': 14, 'color': "black"}}, 
@@ -183,30 +184,29 @@ try:
 
         st.markdown("---")
 
-        # --- FUNCIÓN DE ESTILO (EJES TRANSPARENTES + MARGEN) ---
-        def estilo_ejes(fig):
+        # --- FUNCIÓN DE ESTILO (EJES GRISES + MARGEN) ---
+        def estilo_ejes(fig, margin_top=30):
             fig.update_layout(
                 paper_bgcolor='white', 
                 plot_bgcolor='white', 
                 font={'color': 'black'},
-                # AQUÍ ESTÁ EL AUMENTO DE MARGEN DERECHO (r=60)
-                margin=dict(l=20, r=60, t=30, b=20) 
+                margin=dict(l=20, r=60, t=margin_top, b=20) # MARGEN DERECHO AMPLIADO
             )
             fig.update_xaxes(
-                showline=False,  # Eje invisible
-                showgrid=False,  # Grid invisible
+                showline=True, linewidth=1, linecolor='#D1D5DB', # EJE GRIS CLARO
+                showgrid=False, 
                 zeroline=False,
                 tickfont=dict(color='black'), 
                 title_font=dict(color='black'),
-                tickcolor='black' # Las marcas siguen siendo negras
+                tickcolor='#D1D5DB'
             )
             fig.update_yaxes(
-                showline=False,  # Eje invisible
+                showline=True, linewidth=1, linecolor='#D1D5DB', # EJE GRIS CLARO
                 showgrid=False,
                 zeroline=False,
                 tickfont=dict(color='black'), 
                 title_font=dict(color='black'),
-                tickcolor='black'
+                tickcolor='#D1D5DB'
             )
             return fig
 
@@ -231,7 +231,8 @@ try:
                 horas = all_hours.merge(horas, on='Hora', how='left').fillna(0)
                 fig_bar_h = px.bar(horas, x='Hora', y='Cantidad', text='Cantidad', color_discrete_sequence=[C_BLUE])
                 fig_bar_h.update_traces(textposition='outside')
-                fig_bar_h = estilo_ejes(fig_bar_h)
+                # MARGEN SUPERIOR ESPECÍFICO DE 15px
+                fig_bar_h = estilo_ejes(fig_bar_h, margin_top=15)
                 fig_bar_h.update_xaxes(tickmode='linear', dtick=1)
                 st.plotly_chart(fig_bar_h, use_container_width=True)
 
@@ -244,7 +245,6 @@ try:
                 genero = df_filtered[col_genero].value_counts().reset_index()
                 genero.columns = ['Género', 'Cantidad']
                 fig_pie = px.pie(genero, values='Cantidad', names='Género', hole=0.5, color_discrete_sequence=PALETTE)
-                # Aplicamos estilo manual porque pie chart no usa xaxes/yaxes
                 fig_pie.update_layout(
                     paper_bgcolor='white', 
                     font={'color': 'black'},
@@ -270,7 +270,7 @@ try:
         fig_ubic.update_traces(textposition='outside')
         fig_ubic = estilo_ejes(fig_ubic)
         fig_ubic.update_yaxes(visible=False)
-        fig_ubic.update_layout(margin=dict(b=50, r=60)) # Margen específico aquí también
+        fig_ubic.update_layout(margin=dict(b=50, r=60)) # Margen derecho aplicado
         st.plotly_chart(fig_ubic, use_container_width=True)
 
         st.markdown("---")
