@@ -163,8 +163,8 @@ try:
         pct_avance = (total_real/META)*100
         
         col1, col2, col3, col4 = st.columns(4)
-        col1.metric("Muestra Filtrada", len(df_filtered))
-        col2.metric("Total Real", total_real)
+        col1.metric("Respuestas", len(df_filtered))
+        col2.metric("Total Real", META)
         col3.metric("Faltantes", META - total_real)
         
         with col4:
