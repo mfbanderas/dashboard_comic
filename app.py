@@ -12,23 +12,23 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. ESTILOS CSS (Forzar Modo Claro y Textos Oscuros) ---
+# --- 2. ESTILOS CSS (Forzar Modo Claro y Alto Contraste) ---
 st.markdown("""
     <style>
-    /* 1. Fondo de toda la aplicación BLANCO */
+    /* 1. Fondo BLANCO */
     .stApp {
         background-color: #FFFFFF !important;
         color: #000000 !important;
     }
     
-    /* 2. Todos los textos (H1, H2, Párrafos) en NEGRO PURO */
+    /* 2. Textos en NEGRO PURO */
     h1, h2, h3, h4, h5, h6, p, span, div, label, .stMarkdown {
         color: #000000 !important;
     }
     
     /* 3. Tarjetas de métricas */
     div[data-testid="stMetric"] {
-        background-color: #F9FAFB !important; /* Gris muy clarito para diferenciar */
+        background-color: #F9FAFB !important;
         border: 1px solid #E5E7EB !important;
         padding: 10px;
         border-radius: 10px;
@@ -37,16 +37,15 @@ st.markdown("""
         height: 140px;
     }
     
-    /* Etiquetas y Valores de Métricas */
     [data-testid="stMetricLabel"] {
         color: #000000 !important;
         font-weight: bold !important;
     }
     [data-testid="stMetricValue"] {
-        color: #E74C3C !important; /* Rojo corporativo */
+        color: #E74C3C !important;
     }
     
-    /* 4. Caja para el Gauge (Columna 4) */
+    /* 4. Caja para el Gauge */
     div[data-testid="column"]:nth-of-type(4) div[data-testid="stVerticalBlock"] {
         background-color: #F9FAFB !important;
         border: 1px solid #E5E7EB !important;
@@ -59,12 +58,11 @@ st.markdown("""
         justify-content: center;
     }
 
-    /* Sidebar blanca */
     [data-testid="stSidebar"] {
         background-color: #F3F4F6 !important;
     }
     
-    /* Arreglo para títulos de Plotly */
+    /* Títulos de gráficos en negro */
     .gtitle {
         fill: #000000 !important;
     }
@@ -73,7 +71,7 @@ st.markdown("""
 
 # Colores
 C_RED = '#E74C3C'
-C_BLACK = '#000000' # Negro puro
+C_BLACK = '#000000' 
 C_BLUE = '#3498DB'
 C_YELLOW = '#F1C40F'
 PALETTE = [C_RED, C_BLACK, C_BLUE, C_YELLOW]
@@ -103,7 +101,6 @@ def load_data():
     # Procesar fechas
     if 'Fecha' in df.columns and 'Hora' in df.columns:
         df['Fecha_dt'] = pd.to_datetime(df['Fecha'], dayfirst=True, errors='coerce')
-        # Fallback si fecha es nula
         df['Fecha_dt'] = df['Fecha_dt'].fillna(pd.Timestamp.today())
         df['Hora_dt'] = pd.to_datetime(df['Hora'], format='%H:%M:%S', errors='coerce').dt.hour
     elif 'Fecha de envío' in df.columns:
@@ -164,15 +161,15 @@ try:
         pct_avance = (total_real/META)*100
         
         col1, col2, col3, col4 = st.columns(4)
-        col1.metric("Muestra Filtrada", len(df_filtered))
-        col2.metric("Total Real", total_real)
+        col1.metric("Respuestas", len(df_filtered))
+        col2.metric("Meta", META)
         col3.metric("Faltantes", META - total_real)
         
         with col4:
             # GAUGE
             fig_gauge = go.Figure(go.Indicator(
                 mode = "gauge+number", value = pct_avance,
-                title = {'text': "AVANCE %", 'font': {'size': 14, 'color': "black"}}, # TEXTO NEGRO
+                title = {'text': "AVANCE %", 'font': {'size': 14, 'color': "black"}}, 
                 number = {'suffix': "%", 'font': {'size': 36, 'color': C_RED}},
                 gauge = {'axis': {'range': [None, 100]}, 'bar': {'color': C_RED}, 'bgcolor': "white"}
             ))
@@ -181,7 +178,7 @@ try:
                 margin=dict(t=40, b=0, l=15, r=15), 
                 paper_bgcolor='rgba(0,0,0,0)', 
                 plot_bgcolor='rgba(0,0,0,0)', 
-                font={'color': 'black', 'family': 'Arial'} # FUENTE NEGRA GLOBAL
+                font={'color': 'black', 'family': 'Arial'}
             )
             st.plotly_chart(fig_gauge, use_container_width=True)
 
@@ -191,18 +188,31 @@ try:
         st.markdown("### 1. Dinámica de Respuesta")
         c1, c2 = st.columns((2, 1))
         
+        # --- FUNCIÓN DE ESTILO PARA EJES NEGROS ---
+        def estilo_ejes(fig):
+            fig.update_layout(
+                paper_bgcolor='white', 
+                plot_bgcolor='white', 
+                font={'color': 'black'},
+            )
+            fig.update_xaxes(
+                showline=True, linewidth=1, linecolor='black', mirror=True,
+                tickfont=dict(color='black'), title_font=dict(color='black'),
+                gridcolor='#EEEEEE', tickcolor='black'
+            )
+            fig.update_yaxes(
+                showline=True, linewidth=1, linecolor='black', mirror=True,
+                tickfont=dict(color='black'), title_font=dict(color='black'),
+                gridcolor='#EEEEEE', tickcolor='black'
+            )
+            return fig
+
         with c1:
             st.markdown("**📅 Evolución Diaria**")
             diario = df_filtered.groupby('Fecha_dt').size().reset_index(name='Encuestas')
             fig_line = px.line(diario, x='Fecha_dt', y='Encuestas', markers=True)
             fig_line.update_traces(line_color='#2C3E50', marker_color=C_RED)
-            fig_line.update_layout(
-                paper_bgcolor='white', 
-                plot_bgcolor='white', 
-                font={'color': 'black'}, # TEXTO NEGRO
-                yaxis_gridcolor='#EEEEEE',
-                xaxis_gridcolor='#EEEEEE'
-            )
+            fig_line = estilo_ejes(fig_line) # APLICAR ESTILO
             st.plotly_chart(fig_line, use_container_width=True)
             
         with c2:
@@ -214,13 +224,8 @@ try:
                 horas = all_hours.merge(horas, on='Hora', how='left').fillna(0)
                 fig_bar_h = px.bar(horas, x='Hora', y='Cantidad', text='Cantidad', color_discrete_sequence=[C_BLUE])
                 fig_bar_h.update_traces(textposition='outside')
-                fig_bar_h.update_layout(
-                    paper_bgcolor='white', 
-                    plot_bgcolor='white', 
-                    font={'color': 'black'}, # TEXTO NEGRO
-                    xaxis=dict(tickmode='linear', dtick=1), 
-                    yaxis_gridcolor='#EEEEEE'
-                )
+                fig_bar_h = estilo_ejes(fig_bar_h) # APLICAR ESTILO
+                fig_bar_h.update_xaxes(tickmode='linear', dtick=1)
                 st.plotly_chart(fig_bar_h, use_container_width=True)
 
         st.markdown("### 2. Perfil del Encuestado")
@@ -232,7 +237,6 @@ try:
                 genero = df_filtered[col_genero].value_counts().reset_index()
                 genero.columns = ['Género', 'Cantidad']
                 fig_pie = px.pie(genero, values='Cantidad', names='Género', hole=0.5, color_discrete_sequence=PALETTE)
-                # Leyenda y textos en negro
                 fig_pie.update_layout(
                     paper_bgcolor='white', 
                     font={'color': 'black'},
@@ -245,13 +249,9 @@ try:
             roles = df_filtered['A7. Rol Principal'].value_counts().head(7).reset_index()
             roles.columns = ['Rol', 'Cantidad']
             fig_rol = px.bar(roles, y='Rol', x='Cantidad', orientation='h', text='Cantidad', color_discrete_sequence=[C_YELLOW])
-            fig_rol.update_traces(textposition='inside', textfont=dict(color='black')) # Texto dentro de barra negro
-            fig_rol.update_layout(
-                paper_bgcolor='white', 
-                plot_bgcolor='white', 
-                font={'color': 'black'}, # Ejes en negro
-                xaxis_visible=False
-            )
+            fig_rol.update_traces(textposition='inside', textfont=dict(color='black')) 
+            fig_rol = estilo_ejes(fig_rol) # APLICAR ESTILO
+            fig_rol.update_xaxes(visible=False) # Ocultar eje X en este caso específico
             st.plotly_chart(fig_rol, use_container_width=True)
 
         st.markdown("**Distribución Geográfica (Top 15)**")
@@ -259,13 +259,9 @@ try:
         ubic.columns = ['Lugar', 'Cantidad']
         fig_ubic = px.bar(ubic, x='Lugar', y='Cantidad', text='Cantidad', color_discrete_sequence=['#000000'])
         fig_ubic.update_traces(textposition='outside')
-        fig_ubic.update_layout(
-            paper_bgcolor='white', 
-            plot_bgcolor='white', 
-            font={'color': 'black'}, # Texto ejes negro
-            yaxis_visible=False, 
-            margin=dict(b=50)
-        )
+        fig_ubic = estilo_ejes(fig_ubic) # APLICAR ESTILO
+        fig_ubic.update_yaxes(visible=False)
+        fig_ubic.update_layout(margin=dict(b=50))
         st.plotly_chart(fig_ubic, use_container_width=True)
 
         st.markdown("---")
