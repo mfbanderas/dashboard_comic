@@ -12,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. ESTILOS CSS "AESTHETIC" (TEXTO GRANDE 40px) ---
+# --- 2. ESTILOS CSS (Aesthetic + Letra 40px) ---
 st.markdown("""
     <style>
     /* 1. Fondo General Aesthetic */
@@ -21,7 +21,7 @@ st.markdown("""
         color: #262730 !important;
     }
     
-    /* 2. Títulos con Marca Roja Vertical */
+    /* 2. Títulos con Marca Roja */
     h1, h2, h3 {
         color: #1F2937 !important;
         border-left: 6px solid #E74C3C !important;
@@ -29,7 +29,7 @@ st.markdown("""
         font-family: 'Helvetica Neue', sans-serif;
     }
     
-    /* 3. Aumentar tamaño de texto general */
+    /* 3. Tamaño de texto general */
     p, li, label, .stMarkdown, div {
         font-size: 16px !important;
     }
@@ -55,11 +55,11 @@ st.markdown("""
         font-weight: 600 !important;
     }
     
-    /* VALORES (Los números en rojo) - AHORA TAMAÑO 40px */
+    /* VALORES (Números en Rojo) - TAMAÑO 40px PARA IGUALAR AL GAUGE */
     [data-testid="stMetricValue"] {
         color: #E74C3C !important;
-        font-size: 150px !important; /* <--- CAMBIO AQUÍ */
-        font-weight: 900 !important;
+        font-size: 40px !important; 
+        font-weight: 700 !important;
     }
     
     /* 5. Caja Blanca para el Gauge */
@@ -168,7 +168,7 @@ try:
         st.markdown("Reporte diario de avance y calidad de la muestra.")
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # KPIs (ACTUALIZADOS CON TU LÓGICA)
+        # KPIs (TU LÓGICA + TAMAÑO 40px)
         META = 150
         total_real = len(df)
         pct_avance = (total_real/META)*100
@@ -183,7 +183,7 @@ try:
             st.metric("Faltantes", META - total_real) # Faltantes reales
             
         with col4:
-            # GAUGE
+            # GAUGE (Tamaño 40)
             fig_gauge = go.Figure(go.Indicator(
                 mode = "gauge+number", value = pct_avance,
                 title = {'text': "AVANCE %", 'font': {'size': 15, 'color': "#555"}}, 
@@ -201,12 +201,12 @@ try:
 
         st.markdown("---")
 
-        # --- FUNCIÓN DE ESTILO (Letra Grande + Margen + Ejes Grises) ---
+        # --- FUNCIÓN DE ESTILO ---
         def estilo_grafico(fig, margin_top=40):
             fig.update_layout(
                 paper_bgcolor='white', 
                 plot_bgcolor='white', 
-                font={'color': '#2C3E50', 'size': 14}, # Letra más grande y oscura
+                font={'color': '#2C3E50', 'size': 14}, 
                 margin=dict(l=20, r=60, t=margin_top, b=20)
             )
             fig.update_xaxes(
@@ -241,6 +241,7 @@ try:
                 horas.columns = ['Hora', 'Cantidad']
                 all_hours = pd.DataFrame({'Hora': range(24)})
                 horas = all_hours.merge(horas, on='Hora', how='left').fillna(0)
+                
                 fig_bar_h = px.bar(horas, x='Hora', y='Cantidad', text='Cantidad', color_discrete_sequence=[C_BLUE])
                 fig_bar_h.update_traces(textposition='outside')
                 # Margen superior 15 para hora punta
@@ -257,6 +258,7 @@ try:
             if col_genero in df_filtered.columns:
                 genero = df_filtered[col_genero].value_counts().reset_index()
                 genero.columns = ['Género', 'Cantidad']
+                
                 fig_pie = px.pie(genero, values='Cantidad', names='Género', hole=0.5, color_discrete_sequence=PALETTE)
                 fig_pie.update_layout(
                     paper_bgcolor='white', 
@@ -270,6 +272,7 @@ try:
             st.markdown("**Roles Principales**")
             roles = df_filtered['A7. Rol Principal'].value_counts().head(7).reset_index()
             roles.columns = ['Rol', 'Cantidad']
+            
             fig_rol = px.bar(roles, y='Rol', x='Cantidad', orientation='h', text='Cantidad', color_discrete_sequence=[C_YELLOW])
             fig_rol.update_traces(textposition='inside', textfont=dict(color='black', size=14)) 
             fig_rol = estilo_grafico(fig_rol)
@@ -280,6 +283,7 @@ try:
         st.markdown("### Distribución Geográfica (Top 15)")
         ubic = df_filtered['Ubicación Final'].value_counts().head(15).reset_index()
         ubic.columns = ['Lugar', 'Cantidad']
+        
         fig_ubic = px.bar(ubic, x='Lugar', y='Cantidad', text='Cantidad', color_discrete_sequence=[C_BLACK])
         fig_ubic.update_traces(textposition='outside')
         fig_ubic = estilo_grafico(fig_ubic, margin_top=30)
