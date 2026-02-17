@@ -12,16 +12,16 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. ESTILOS CSS (Aesthetic + LETRAS GIGANTES) ---
+# --- 2. ESTILOS CSS AGRESIVOS (FUERZA BRUTA PARA TAMAÑO) ---
 st.markdown("""
     <style>
-    /* 1. Fondo General Aesthetic */
+    /* 1. Fondo General */
     .stApp {
         background-color: #F0F2F6 !important;
         color: #262730 !important;
     }
     
-    /* 2. Títulos con Marca Roja */
+    /* 2. Títulos con Marca */
     h1, h2, h3 {
         color: #1F2937 !important;
         border-left: 6px solid #E74C3C !important;
@@ -29,7 +29,7 @@ st.markdown("""
         font-family: 'Helvetica Neue', sans-serif;
     }
     
-    /* 3. Tamaño de texto general */
+    /* 3. Textos generales más grandes */
     p, li, label, .stMarkdown, div {
         font-size: 16px !important;
     }
@@ -42,7 +42,7 @@ st.markdown("""
         border-radius: 12px;
         box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         text-align: center;
-        height: 160px; /* Un poco más altas para que quepa el número grande */
+        height: 160px;
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -51,15 +51,16 @@ st.markdown("""
     /* Etiquetas (Label) */
     [data-testid="stMetricLabel"] {
         color: #6B7280 !important;
-        font-size: 1.1rem !important;
+        font-size: 1.2rem !important; /* Etiqueta un poco más grande también */
         font-weight: 600 !important;
     }
     
-    /* VALORES (Números en Rojo) - TAMAÑO 55px (MUY GRANDE) */
-    [data-testid="stMetricValue"] {
+    /* VALORES (Números Rojos) - SELECTOR DOBLE PARA FORZAR TAMAÑO */
+    [data-testid="stMetricValue"], [data-testid="stMetricValue"] div {
         color: #E74C3C !important;
-        font-size: 55px !important;  /* <--- AUMENTADO A 55px */
-        font-weight: 800 !important;
+        font-size: 40px !important;  /* TAMAÑO GIGANTE */
+        font-weight: 700 !important;
+        line-height: 1.2 !important;
     }
     
     /* 5. Caja Blanca para el Gauge */
@@ -69,7 +70,7 @@ st.markdown("""
         border-radius: 12px;
         box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         padding: 10px;
-        height: 160px; /* Igualamos altura con las tarjetas */
+        height: 160px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -105,14 +106,17 @@ def load_data():
         except:
              return None 
 
+    # Limpieza de nombres
     df.columns = df.columns.str.strip()
     
+    # Rellenar vacíos
     if "A7. Rol Principal" in df.columns:
         df["A7. Rol Principal"] = df["A7. Rol Principal"].fillna("Sin especificar")
     
     if "A2. Identidad de género" in df.columns:
         df["A2. Identidad de género"] = df["A2. Identidad de género"].fillna("No responde")
 
+    # Fechas
     if 'Fecha' in df.columns and 'Hora' in df.columns:
         df['Fecha_dt'] = pd.to_datetime(df['Fecha'], dayfirst=True, errors='coerce')
         df['Fecha_dt'] = df['Fecha_dt'].fillna(pd.Timestamp.today())
@@ -122,6 +126,7 @@ def load_data():
          df['Fecha_dt'] = df['Fecha_Completa'].dt.normalize()
          df['Hora_dt'] = df['Fecha_Completa'].dt.hour
          
+    # Ubicación
     if 'A5. Provincia de residencia' in df.columns:
         df['Ubicación Final'] = df.apply(
             lambda x: x['A5. Provincia de residencia'] if pd.notna(x['A5. Provincia de residencia']) 
@@ -131,10 +136,14 @@ def load_data():
         
     return df
 
+# --- 4. EJECUCIÓN PRINCIPAL ---
 try:
     df = load_data()
-    if df is not None:
-        # --- 4. FILTROS ---
+    
+    if df is None:
+        st.error("⚠️ El archivo 'results-survey1.csv' no se encuentra.")
+    else:
+        # --- FILTROS ---
         with st.sidebar:
             st.header("🎛️ Panel de Control")
             
@@ -188,7 +197,7 @@ try:
             fig_gauge = go.Figure(go.Indicator(
                 mode = "gauge+number", value = pct_avance,
                 title = {'text': "AVANCE %", 'font': {'size': 15, 'color': "#555"}}, 
-                number = {'suffix': "%", 'font': {'size': 55, 'color': C_RED, 'weight': 'bold'}}, # <--- AUMENTADO A 55
+                number = {'suffix': "%", 'font': {'size': 55, 'color': C_RED, 'weight': 'bold'}}, # GIGANTE
                 gauge = {'axis': {'range': [None, 100]}, 'bar': {'color': C_RED}, 'bgcolor': "#f0f2f6"}
             ))
             fig_gauge.update_layout(
@@ -211,12 +220,12 @@ try:
                 margin=dict(l=20, r=60, t=margin_top, b=20)
             )
             fig.update_xaxes(
-                showline=True, linewidth=1, linecolor='#D1D5DB', # Eje gris claro
+                showline=True, linewidth=1, linecolor='#D1D5DB', 
                 showgrid=False, zeroline=False,
                 tickfont=dict(size=12, color='black')
             )
             fig.update_yaxes(
-                showline=True, linewidth=1, linecolor='#D1D5DB', # Eje gris claro
+                showline=True, linewidth=1, linecolor='#D1D5DB', 
                 showgrid=True, gridcolor='#F3F4F6',
                 zeroline=False,
                 tickfont=dict(size=12, color='black')
@@ -287,9 +296,6 @@ try:
 
         st.markdown("---")
         st.markdown("<div style='text-align: center; color: #666; font-size: 14px;'>Dashboard generado con Python Streamlit</div>", unsafe_allow_html=True)
-
-    else:
-        st.error("⚠️ Error: No se pudo cargar 'results-survey1.csv'.")
 
 except Exception as e:
     st.error(f"Error inesperado: {e}")
