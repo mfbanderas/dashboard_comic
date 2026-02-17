@@ -58,7 +58,7 @@ st.markdown("""
     /* VALORES (Los números en rojo) - AHORA TAMAÑO 40px */
     [data-testid="stMetricValue"] {
         color: #E74C3C !important;
-        font-size: 40px !important; /* <--- CAMBIO AQUÍ */
+        font-size: 80px !important; /* <--- CAMBIO AQUÍ */
         font-weight: 700 !important;
     }
     
