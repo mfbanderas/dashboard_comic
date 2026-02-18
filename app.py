@@ -184,7 +184,7 @@ try:
             fig_g = go.Figure(go.Indicator(
                 mode = "gauge+number", value = pct_avance,
                 title = {'text': "AVANCE GLOBAL", 'font': {'size': 12, 'color': "gray"}},
-                number = {'suffix': "%", 'font': {'size': 45, 'color': C_RED, 'weight': 'bold'}}, # Tamaño ajustado
+                number = {'suffix': "%", 'font': {'size': 40, 'color': C_RED, 'weight': 'bold'}}, # Tamaño ajustado
                 gauge = {
                     'axis': {'range': [None, 100], 'tickwidth': 0, 'tickcolor': "white"},
                     'bar': {'color': C_RED},
