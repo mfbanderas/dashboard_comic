@@ -234,7 +234,7 @@ try:
                 horas.columns = ['Hora', 'N']
                 fig2 = px.bar(horas, x='Hora', y='N', text='N', color_discrete_sequence=[C_BLUE])
                 fig2.update_traces(textposition='outside')
-                fig2 = aplicar_estilo(fig2, mt=15) # Margen top 15 solicitado
+                fig2 = aplicar_estilo(fig2, mt=25) # Margen top 15 solicitado
                 fig2.update_xaxes(tickmode='linear', dtick=4) # Menos etiquetas para limpiar
                 st.plotly_chart(fig2, use_container_width=True)
 
