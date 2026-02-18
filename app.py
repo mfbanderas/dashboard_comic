@@ -54,7 +54,7 @@ st.markdown("""
     /* VALORES DE MÉTRICAS (GIGANTES 55px) */
     [data-testid="stMetricValue"], [data-testid="stMetricValue"] div {
         color: #E74C3C !important;
-        font-size: 55px !important;
+        font-size: 45px !important;
         font-weight: 800 !important;
         line-height: 1.2 !important;
     }
