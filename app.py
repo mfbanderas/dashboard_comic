@@ -251,7 +251,7 @@ try:
                 fig3.update_layout(
                     paper_bgcolor='white', font={'color': C_BLACK, 'size': 20},
                     margin=dict(l=20, r=50, t=30, b=20),
-                    legend=dict(orientation="h", y=-0.1) # Leyenda abajo
+                    legend=dict(orientation="h", y=-0.1, font=dict(size=15)) # Leyenda abajo
                 )
                 st.plotly_chart(fig3, use_container_width=True)
                 
