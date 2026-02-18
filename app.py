@@ -249,7 +249,7 @@ try:
                 gen.columns = ['Género', 'N']
                 fig3 = px.pie(gen, values='N', names='Género', hole=0.5, color_discrete_sequence=PALETTE)
                 fig3.update_layout(
-                    paper_bgcolor='white', font={'color': C_BLACK, 'size': 14},
+                    paper_bgcolor='white', font={'color': C_BLACK, 'size': 20},
                     margin=dict(l=20, r=50, t=30, b=20),
                     legend=dict(orientation="h", y=-0.1) # Leyenda abajo
                 )
