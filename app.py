@@ -232,7 +232,7 @@ try:
                 line_width=3, 
                 marker_size=8,
                 textposition="top center", # Posiciona el número arriba del punto
-                textfont_size=20           # Opcional: ajusta el tamaño de la fuente del número
+                textfont_size=18           # Opcional: ajusta el tamaño de la fuente del número
             )
             
             fig1 = aplicar_estilo(fig1)
