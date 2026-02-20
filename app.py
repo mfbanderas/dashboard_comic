@@ -220,19 +220,47 @@ try:
         g1, g2 = st.columns((2, 1))
         
         with g1:
-            st.markdown("**📅 Evolución Diaria**")
+            st.markdown("**📅 Evolución Diaria y Avance Global**")
+    
+            # 1. Calculamos los datos diarios y el acumulado (Avance Global)
             diario = df_filtered.groupby('Fecha_dt').size().reset_index(name='N')
+            diario['Acumulado'] = diario['N'].cumsum() 
             
-            # Creamos el gráfico indicando que el texto de las etiquetas será la columna 'N'
-            fig1 = px.line(diario, x='Fecha_dt', y='N', markers=True, text='N')
+            # 2. Creamos el gráfico base con la línea diaria
+            fig1 = px.line(diario, x='Fecha_dt', y='N', markers=True, text='N', name='Diario')
             
+            # 3. Añadimos la línea de Avance Global (usando add_scatter)
+            fig1.add_scatter(
+                x=diario['Fecha_dt'], 
+                y=diario['Acumulado'], 
+                name='Avance Global',
+                mode='lines+markers+text',
+                text=diario['Acumulado'],
+                textposition="top center",
+                line=dict(color='blue', width=2, dash='dot'), # Color azul y línea punteada
+                yaxis="y2" # Se asigna al eje Y secundario
+            )
+            
+            # 4. Ajustes estéticos y configuración del segundo eje Y
+            fig1.update_layout(
+                yaxis2=dict(
+                    title="Total Acumulado",
+                    overlaying="y",
+                    side="right",
+                    showgrid=False # Para no ensuciar el gráfico con doble cuadrícula
+                ),
+                legend=dict(orientation="h", y=-0.2), # Leyenda abajo para que no estorbe
+                hovermode="x unified"
+            )
+
+            # Ajustes para la línea diaria original (traza 0)
             fig1.update_traces(
+                selector=dict(name='Diario'),
                 line_color=C_BLACK, 
                 marker_color=C_RED, 
                 line_width=3, 
                 marker_size=8,
-                textposition="top center", # Posiciona el número arriba del punto
-                textfont_size=18           # Opcional: ajusta el tamaño de la fuente del número
+                textposition="top center"
             )
             
             fig1 = aplicar_estilo(fig1)
