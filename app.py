@@ -221,15 +221,13 @@ try:
         
         with g1:
             st.markdown("**📅 Evolución Diaria y Avance Global**")
-    
-            # 1. Calculamos los datos diarios y el acumulado (Avance Global)
             diario = df_filtered.groupby('Fecha_dt').size().reset_index(name='N')
             diario['Acumulado'] = diario['N'].cumsum() 
             
-            # 2. Creamos el gráfico base con la línea diaria
-            fig1 = px.line(diario, x='Fecha_dt', y='N', markers=True, text='N', name='Diario')
+            # 2. Crear gráfico base (sin el argumento 'name' para evitar el error)
+            fig1 = px.line(diario, x='Fecha_dt', y='N', markers=True, text='N')
             
-            # 3. Añadimos la línea de Avance Global (usando add_scatter)
+            # 3. Añadir la línea de Avance Global con eje secundario
             fig1.add_scatter(
                 x=diario['Fecha_dt'], 
                 y=diario['Acumulado'], 
@@ -237,23 +235,24 @@ try:
                 mode='lines+markers+text',
                 text=diario['Acumulado'],
                 textposition="top center",
-                line=dict(color='blue', width=2, dash='dot'), # Color azul y línea punteada
-                yaxis="y2" # Se asigna al eje Y secundario
+                line=dict(color='blue', width=2, dash='dot'),
+                yaxis="y2"
             )
             
-            # 4. Ajustes estéticos y configuración del segundo eje Y
+            # 4. Configurar nombres y ejes
             fig1.update_layout(
                 yaxis2=dict(
                     title="Total Acumulado",
                     overlaying="y",
                     side="right",
-                    showgrid=False # Para no ensuciar el gráfico con doble cuadrícula
+                    showgrid=False
                 ),
-                legend=dict(orientation="h", y=-0.2), # Leyenda abajo para que no estorbe
+                legend=dict(orientation="h", y=-0.2),
                 hovermode="x unified"
             )
 
-            # Ajustes para la línea diaria original (traza 0)
+            # 5. Aplicar estilos a la traza diaria (la primera traza del gráfico)
+            fig1.data[0].name = "Diario" # Asignamos el nombre manualmente aquí
             fig1.update_traces(
                 selector=dict(name='Diario'),
                 line_color=C_BLACK, 
