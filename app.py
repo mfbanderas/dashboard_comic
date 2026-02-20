@@ -220,57 +220,19 @@ try:
         g1, g2 = st.columns((2, 1))
         
         with g1:
-            st.markdown("**📅 Avance del Objetivo (Meta: 150) y Evolución Diaria**")
-            # 1. Preparar datos
+            st.markdown("**📅 Evolución Diaria**")
             diario = df_filtered.groupby('Fecha_dt').size().reset_index(name='N')
-            meta_objetivo = 150
-            diario['Porcentaje_Acumulado'] = (diario['N'].cumsum() / meta_objetivo) * 100
             
-            # 2. Crear gráfico de BARRAS (Sin el argumento 'name' aquí)
-            fig1 = px.bar(
-                diario, 
-                x='Fecha_dt', 
-                y='Porcentaje_Acumulado',
-                text=diario['Porcentaje_Acumulado'].map('{:.1f}%'.format)
-            )
+            # Creamos el gráfico indicando que el texto de las etiquetas será la columna 'N'
+            fig1 = px.line(diario, x='Fecha_dt', y='N', markers=True, text='N')
             
-            # 3. Añadir LÍNEA para el conteo diario (Eje Secundario Y2)
-            fig1.add_scatter(
-                x=diario['Fecha_dt'], 
-                y=diario['N'], 
-                name='Casos Diarios',
-                mode='lines+markers+text',
-                text=diario['N'],
-                textposition="top center",
-                line=dict(color=C_BLACK, width=3),
-                marker=dict(color=C_RED, size=10),
-                yaxis="y2"
-            )
-            
-            # 4. Configuración de Layout y Ejes
-            fig1.update_layout(
-                yaxis=dict(
-                    title="Progreso hacia la Meta (%)",
-                    range=[0, 110], 
-                    ticksuffix="%"
-                ),
-                yaxis2=dict(
-                    title="Casos por Día",
-                    overlaying="y",
-                    side="right",
-                    showgrid=False
-                ),
-                legend=dict(orientation="h", y=-0.2),
-                hovermode="x unified",
-                bargap=0.3
-            )
-
-            # 5. Estilo de las barras y ASIGNAR NOMBRE a la traza 0
-            fig1.data[0].name = "% Avance Global" # <-- Esto soluciona el error
             fig1.update_traces(
-                selector=dict(type='bar'),
-                marker_color='rgba(100, 149, 237, 0.6)', 
-                textposition="outside"
+                line_color=C_BLACK, 
+                marker_color=C_RED, 
+                line_width=3, 
+                marker_size=8,
+                textposition="top center", # Posiciona el número arriba del punto
+                textfont_size=12           # Opcional: ajusta el tamaño de la fuente del número
             )
             
             fig1 = aplicar_estilo(fig1)
