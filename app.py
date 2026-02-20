@@ -220,47 +220,57 @@ try:
         g1, g2 = st.columns((2, 1))
         
         with g1:
-            st.markdown("**📅 Evolución Diaria y % de Avance Global**")
+            st.markdown("**📅 Avance del Objetivo (Meta: 150) y Evolución Diaria**")
             diario = df_filtered.groupby('Fecha_dt').size().reset_index(name='N')
-            total_registros = diario['N'].sum()
-            diario['Porcentaje_Acumulado'] = (diario['N'].cumsum() / total_registros) * 100
+            meta_objetivo = 150
+            # Calculamos el % de avance respecto a la meta fija de 150
+            diario['Porcentaje_Acumulado'] = (diario['N'].cumsum() / meta_objetivo) * 100
             
-            # 2. Crear gráfico de BARRAS para el diario
-            fig1 = px.bar(diario, x='Fecha_dt', y='N', text='N')
-            
-            # 3. Añadir la línea de % Avance Global con eje secundario
-            fig1.add_scatter(
-                x=diario['Fecha_dt'], 
-                y=diario['Porcentaje_Acumulado'], 
-                name='% Avance Global',
-                mode='lines+markers+text',
+            # 2. Crear gráfico de BARRAS para el % de Avance (Eje Principal Y)
+            fig1 = px.bar(
+                diario, 
+                x='Fecha_dt', 
+                y='Porcentaje_Acumulado',
                 text=diario['Porcentaje_Acumulado'].map('{:.1f}%'.format),
-                textposition="top center",
-                line=dict(color=C_RED, width=3), # Usamos el rojo para que destaque la línea
-                yaxis="y2"
+                name='% Avance Global'
             )
             
-            # 4. Configurar ejes y leyenda
+            # 3. Añadir LÍNEA para el conteo diario (Eje Secundario Y2)
+            fig1.add_scatter(
+                x=diario['Fecha_dt'], 
+                y=diario['N'], 
+                name='Casos Diarios',
+                mode='lines+markers+text',
+                text=diario['N'],
+                textposition="top center",
+                line=dict(color=C_BLACK, width=3),
+                marker=dict(color=C_RED, size=10),
+                yaxis="y2" # Enviamos esta traza al eje derecho
+            )
+            
+            # 4. Configuración de Layout y Ejes
             fig1.update_layout(
+                yaxis=dict(
+                    title="Progreso hacia la Meta (%)",
+                    range=[0, 110], # Para ver el avance hacia el 100%
+                    ticksuffix="%"
+                ),
                 yaxis2=dict(
-                    title="Porcentaje del Total (%)",
+                    title="Casos por Día",
                     overlaying="y",
                     side="right",
-                    range=[0, 110], 
-                    showgrid=False,
-                    ticksuffix="%"
+                    showgrid=False
                 ),
                 legend=dict(orientation="h", y=-0.2),
                 hovermode="x unified",
-                bargap=0.2 # Espacio entre barras
+                bargap=0.3
             )
 
-            # 5. Estilo para las barras y la línea
+            # Estilo de las barras (Azul suave o color de tu paleta)
             fig1.update_traces(
                 selector=dict(type='bar'),
-                marker_color=C_BLACK, # Barras en negro (o el color que prefieras)
-                textposition="outside", # Texto de la barra por fuera
-                name="Casos Diarios"
+                marker_color='rgba(100, 149, 237, 0.6)', # Azul acero con transparencia
+                textposition="outside"
             )
             
             fig1 = aplicar_estilo(fig1)
