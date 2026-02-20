@@ -222,8 +222,19 @@ try:
         with g1:
             st.markdown("**📅 Evolución Diaria**")
             diario = df_filtered.groupby('Fecha_dt').size().reset_index(name='N')
-            fig1 = px.line(diario, x='Fecha_dt', y='N', markers=True)
-            fig1.update_traces(line_color=C_BLACK, marker_color=C_RED, line_width=3, marker_size=8)
+            
+            # Creamos el gráfico indicando que el texto de las etiquetas será la columna 'N'
+            fig1 = px.line(diario, x='Fecha_dt', y='N', markers=True, text='N')
+            
+            fig1.update_traces(
+                line_color=C_BLACK, 
+                marker_color=C_RED, 
+                line_width=3, 
+                marker_size=8,
+                textposition="top center", # Posiciona el número arriba del punto
+                textfont_size=12           # Opcional: ajusta el tamaño de la fuente del número
+            )
+            
             fig1 = aplicar_estilo(fig1)
             st.plotly_chart(fig1, use_container_width=True)
             
