@@ -221,18 +221,17 @@ try:
         
         with g1:
             st.markdown("**📅 Avance del Objetivo (Meta: 150) y Evolución Diaria**")
+            # 1. Preparar datos
             diario = df_filtered.groupby('Fecha_dt').size().reset_index(name='N')
             meta_objetivo = 150
-            # Calculamos el % de avance respecto a la meta fija de 150
             diario['Porcentaje_Acumulado'] = (diario['N'].cumsum() / meta_objetivo) * 100
             
-            # 2. Crear gráfico de BARRAS para el % de Avance (Eje Principal Y)
+            # 2. Crear gráfico de BARRAS (Sin el argumento 'name' aquí)
             fig1 = px.bar(
                 diario, 
                 x='Fecha_dt', 
                 y='Porcentaje_Acumulado',
-                text=diario['Porcentaje_Acumulado'].map('{:.1f}%'.format),
-                name='% Avance Global'
+                text=diario['Porcentaje_Acumulado'].map('{:.1f}%'.format)
             )
             
             # 3. Añadir LÍNEA para el conteo diario (Eje Secundario Y2)
@@ -245,14 +244,14 @@ try:
                 textposition="top center",
                 line=dict(color=C_BLACK, width=3),
                 marker=dict(color=C_RED, size=10),
-                yaxis="y2" # Enviamos esta traza al eje derecho
+                yaxis="y2"
             )
             
             # 4. Configuración de Layout y Ejes
             fig1.update_layout(
                 yaxis=dict(
                     title="Progreso hacia la Meta (%)",
-                    range=[0, 110], # Para ver el avance hacia el 100%
+                    range=[0, 110], 
                     ticksuffix="%"
                 ),
                 yaxis2=dict(
@@ -266,10 +265,11 @@ try:
                 bargap=0.3
             )
 
-            # Estilo de las barras (Azul suave o color de tu paleta)
+            # 5. Estilo de las barras y ASIGNAR NOMBRE a la traza 0
+            fig1.data[0].name = "% Avance Global" # <-- Esto soluciona el error
             fig1.update_traces(
                 selector=dict(type='bar'),
-                marker_color='rgba(100, 149, 237, 0.6)', # Azul acero con transparencia
+                marker_color='rgba(100, 149, 237, 0.6)', 
                 textposition="outside"
             )
             
