@@ -220,46 +220,47 @@ try:
         g1, g2 = st.columns((2, 1))
         
         with g1:
-            st.markdown("**📅 Evolución Diaria y Avance Global**")
+            st.markdown("**📅 Evolución Diaria y % de Avance Global**")
             diario = df_filtered.groupby('Fecha_dt').size().reset_index(name='N')
-            diario['Acumulado'] = diario['N'].cumsum() 
+            total_registros = diario['N'].sum()
+            diario['Porcentaje_Acumulado'] = (diario['N'].cumsum() / total_registros) * 100
             
-            # 2. Crear gráfico base (sin el argumento 'name' para evitar el error)
-            fig1 = px.line(diario, x='Fecha_dt', y='N', markers=True, text='N')
+            # 2. Crear gráfico de BARRAS para el diario
+            fig1 = px.bar(diario, x='Fecha_dt', y='N', text='N')
             
-            # 3. Añadir la línea de Avance Global con eje secundario
+            # 3. Añadir la línea de % Avance Global con eje secundario
             fig1.add_scatter(
                 x=diario['Fecha_dt'], 
-                y=diario['Acumulado'], 
-                name='Avance Global',
+                y=diario['Porcentaje_Acumulado'], 
+                name='% Avance Global',
                 mode='lines+markers+text',
-                text=diario['Acumulado'],
+                text=diario['Porcentaje_Acumulado'].map('{:.1f}%'.format),
                 textposition="top center",
-                line=dict(color='blue', width=2, dash='dot'),
+                line=dict(color=C_RED, width=3), # Usamos el rojo para que destaque la línea
                 yaxis="y2"
             )
             
-            # 4. Configurar nombres y ejes
+            # 4. Configurar ejes y leyenda
             fig1.update_layout(
                 yaxis2=dict(
-                    title="Total Acumulado",
+                    title="Porcentaje del Total (%)",
                     overlaying="y",
                     side="right",
-                    showgrid=False
+                    range=[0, 110], 
+                    showgrid=False,
+                    ticksuffix="%"
                 ),
                 legend=dict(orientation="h", y=-0.2),
-                hovermode="x unified"
+                hovermode="x unified",
+                bargap=0.2 # Espacio entre barras
             )
 
-            # 5. Aplicar estilos a la traza diaria (la primera traza del gráfico)
-            fig1.data[0].name = "Diario" # Asignamos el nombre manualmente aquí
+            # 5. Estilo para las barras y la línea
             fig1.update_traces(
-                selector=dict(name='Diario'),
-                line_color=C_BLACK, 
-                marker_color=C_RED, 
-                line_width=3, 
-                marker_size=8,
-                textposition="top center"
+                selector=dict(type='bar'),
+                marker_color=C_BLACK, # Barras en negro (o el color que prefieras)
+                textposition="outside", # Texto de la barra por fuera
+                name="Casos Diarios"
             )
             
             fig1 = aplicar_estilo(fig1)
